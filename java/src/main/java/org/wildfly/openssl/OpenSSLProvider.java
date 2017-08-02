@@ -19,13 +19,14 @@ package org.wildfly.openssl;
 
 import java.security.Provider;
 import java.security.Security;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Stuart Douglas
  */
 public final class OpenSSLProvider extends Provider {
 
-    private static boolean registered = false;
+    private static AtomicBoolean registered = new AtomicBoolean();
 
     public static final OpenSSLProvider INSTANCE = new OpenSSLProvider();
 
@@ -41,15 +42,13 @@ public final class OpenSSLProvider extends Provider {
         put("SSLContext.TLSv1.2", OpenSSLContextSPI.class.getName() + "$" + OpenSSLContextSPI.OpenSSLTLS_1_2_ContextSpi.class.getSimpleName());
     }
 
-    public static synchronized void register() {
-        if (!registered) {
-            registered = true;
+    public static void register() {
+        if (registered.compareAndSet(false, true)) {
             Security.addProvider(INSTANCE);
         }
     }
-    public static synchronized void registerFirst() {
-        if (!registered) {
-            registered = true;
+    public static void registerFirst() {
+        if (registered.compareAndSet(false, true)) {
             Security.insertProviderAt(INSTANCE, 1);
         }
     }
